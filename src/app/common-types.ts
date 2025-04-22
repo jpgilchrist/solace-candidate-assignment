@@ -10,6 +10,13 @@ export type Advocate = {
   createdAt: Date;
 };
 
+export type Pagination = {
+  pageIndex: number;
+  pageSize: number;
+  rowCount: number;
+};
+
 export type AdvocateResponse = {
   data: Advocate[];
+  pagination: Pagination;
 };

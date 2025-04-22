@@ -1,7 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { Advocate, AdvocateResponse } from "./common-types";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,8 @@ import {
   createColumnHelper,
   getCoreRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
+  PaginationState,
   useReactTable,
 } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/data-table-header";
@@ -58,16 +60,46 @@ const defaultColumns = [
   }),
 ];
 
+type CombinedFilters = {
+  globalFilter: string;
+  pagination: PaginationState;
+};
+
+const DEFAULT_PAGINATION = {
+  pageIndex: 0,
+  pageSize: 10,
+};
+
+const DEFAULT_GLOBAL_FILTER = "";
+
 export default function Home() {
-  const [globalFilter, setGlobalFilter] = useState<string>("");
-  const [debouncedGlobalFilter] = useDebounce(globalFilter, 300);
+  const [globalFilter, setGlobalFilter] = useState<string>(
+    DEFAULT_GLOBAL_FILTER
+  );
+  const [pagination, setPagination] =
+    useState<PaginationState>(DEFAULT_PAGINATION);
+
+  const combinedFilters = useMemo<CombinedFilters>(() => {
+    return { globalFilter, pagination };
+  }, [globalFilter, pagination]);
+
+  const [debouncedFilters] = useDebounce(combinedFilters, 300);
 
   const query = useQuery({
-    queryKey: ["search-advocates", debouncedGlobalFilter],
+    queryKey: ["search-advocates", debouncedFilters],
     queryFn: async ({ queryKey }) => {
       const searchParams = new URLSearchParams();
+
       if (queryKey[1]) {
-        searchParams.append("search", queryKey[1]);
+        const { globalFilter, pagination } = queryKey[1] as CombinedFilters;
+
+        if (globalFilter) searchParams.append("search", globalFilter);
+
+        if (pagination.pageIndex)
+          searchParams.append("pageIndex", `${pagination.pageIndex}`);
+
+        if (pagination.pageSize)
+          searchParams.append("pageSize", `${pagination.pageSize}`);
       }
 
       const response = await fetch(`/api/advocates?${searchParams.toString()}`);
@@ -79,24 +111,38 @@ export default function Home() {
 
       return (await response.json()) as unknown as AdvocateResponse;
     },
+
+    placeholderData: keepPreviousData, // avoids flashing of empty content on subsequent queries
   });
+
+  const handleGlobalFilterChange = (value: string) => {
+    setGlobalFilter(value);
+    // reset pagination pageIndex, but keep pageSize
+    setPagination((current) => ({ ...current, pageIndex: 0 }));
+  };
 
   const table = useReactTable({
     data: query.data?.data ?? [],
+    rowCount: query.data?.pagination.rowCount,
     columns: defaultColumns,
 
     state: {
       globalFilter,
+      pagination,
     },
 
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
 
-    onGlobalFilterChange: setGlobalFilter,
+    onGlobalFilterChange: handleGlobalFilterChange,
+    onPaginationChange: setPagination,
 
     enableRowSelection: false,
+    enableSorting: false,
 
     manualFiltering: true,
+    manualPagination: true,
   });
 
   return (
