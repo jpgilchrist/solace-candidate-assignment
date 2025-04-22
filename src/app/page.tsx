@@ -10,6 +10,7 @@ import { DataTable } from "@/components/data-table";
 import {
   createColumnHelper,
   getCoreRowModel,
+  getFilteredRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/data-table-header";
@@ -80,24 +81,36 @@ export default function Home() {
   const table = useReactTable({
     data: query.data?.data ?? [],
     columns: defaultColumns,
+
+    state: {
+      globalFilter,
+    },
+
     getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+
+    onGlobalFilterChange: setGlobalFilter,
+
     enableRowSelection: false,
+
+    manualFiltering: true,
   });
 
   return (
     <main className="p-6 h-full flex flex-col gap-4">
       <h1 className="text-2xl font-bold">Solace Advocates</h1>
 
-      <div>
-        <p>Search</p>
-        <p>
-          Searching for: <span id="search-term"></span>
-        </p>
-        <Input onChange={(e) => setGlobalFilter(e.target.value)} />
+      <div className="flex flex-row gap-4">
+        <Input
+          className="w-full lg:w-96"
+          placeholder="Search"
+          onChange={(e) => table.setGlobalFilter(e.target.value)}
+        />
         <Button onClick={() => setGlobalFilter("")}>Reset Search</Button>
       </div>
 
       <DataTable table={table} loading={query.isLoading} />
+
       <DataTablePagination table={table} />
     </main>
   );
