@@ -29,6 +29,32 @@ Given that all of the queries supported are essentially `OR` and `ILIKE` indicie
 
 I find the structure of storing the "specialities" a bit concerning for long term value. I would prefer to see that the specialties and degrees be broken out into supported values and then those values could be retrieved with a JOIN table. This would make potential faceted option queries easier as the list of options is known ahead of time. Similarly, on specialties a separate column could be used to store the notes (data in the parentheses) allowing a more obvious structure.
 
+### DX Improvement
+
+With hot reloading, the db had issues with too many connections. To get around this it's recommended to setup the following
+
+```ts
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+
+declare global {
+  // allow global to have a cached connection in dev
+  // eslint-disable-next-line no-var
+  var db: ReturnType<typeof drizzle> | undefined;
+}
+
+const queryClient = postgres(process.env.DATABASE_URL!, {
+  max: 1, // adjust as needed
+  idle_timeout: 20,
+});
+
+export const db = global.db ?? drizzle(queryClient);
+
+if (process.env.NODE_ENV !== 'production') {
+  global.db = db;
+}
+```
+
 ## UI / UX Improvements
 
 Given the assumption of multiples of 100K values stored in the database it was imperative to implement server side filtering and pagination on the data, but we could provide more functionality with the tables such as:
