@@ -12,12 +12,14 @@
     "seed": "node --loader esbuild-register/loader -r esbuild-register ./src/db/seed/index.ts"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.74.4",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.32.1",
     "next": "^14.2.19",
     "postgres": "^3.4.4",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "use-debounce": "^10.0.4"
   },
   "devDependencies": {
     "@types/node": "^20.14.12",

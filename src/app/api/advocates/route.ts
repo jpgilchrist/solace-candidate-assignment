@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
             ilike(advocates.city, ilikeValue),
             ilike(advocates.degree, ilikeValue),
             sql`${advocates.specialties}::text ILIKE ${ilikeValue}`,
-            ilike(advocates.yearsOfExperience, ilikeValue)
+            // ilike(advocates.yearsOfExperience, ilikeValue)
           )
         : undefined
     );
