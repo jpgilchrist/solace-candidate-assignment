@@ -52,6 +52,9 @@ const defaultColumns = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Phone" />
     ),
+    cell: (info) => {
+      return <span>+{info.getValue()}</span>;
+    },
   }),
 ];
 
