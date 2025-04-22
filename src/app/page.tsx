@@ -1,12 +1,19 @@
 "use client";
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
-import { useDebounce } from "use-debounce";
-import { Advocate, AdvocateResponse } from "./common-types";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/data-table";
+import { DataTableColumnHeader } from "@/components/data-table-header";
+import { DataTablePagination } from "@/components/data-table-pagination";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { DialogTitle } from "@radix-ui/react-dialog";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -15,8 +22,9 @@ import {
   PaginationState,
   useReactTable,
 } from "@tanstack/react-table";
-import { DataTableColumnHeader } from "@/components/data-table-header";
-import { DataTablePagination } from "@/components/data-table-pagination";
+import { useMemo, useState } from "react";
+import { useDebounce } from "use-debounce";
+import { Advocate, AdvocateResponse } from "./common-types";
 
 const columnHelper = createColumnHelper<Advocate>();
 const defaultColumns = [
@@ -24,16 +32,25 @@ const defaultColumns = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="First Name" />
     ),
+    cell: (info) => {
+      return <span className="whitespace-nowrap">{info.getValue()}</span>;
+    },
   }),
   columnHelper.accessor("lastName", {
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Last Name" />
     ),
+    cell: (info) => {
+      return <span className="whitespace-nowrap">{info.getValue()}</span>;
+    },
   }),
   columnHelper.accessor("city", {
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="City" />
     ),
+    cell: (info) => {
+      return <span className="whitespace-nowrap">{info.getValue()}</span>;
+    },
   }),
   columnHelper.accessor("degree", {
     header: ({ column }) => (
@@ -44,6 +61,41 @@ const defaultColumns = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Specialties" />
     ),
+    cell: (info) => {
+      const specialties: string[] = info.getValue();
+      return (
+        <div className="flex flex-row flex-wrap gap-2">
+          {specialties.slice(0, 3).map((specialty) => (
+            <Badge key={`badge-${specialty}`} variant="secondary">
+              {specialty}
+            </Badge>
+          ))}
+          {specialties.length > 3 && (
+            <Dialog>
+              <DialogTrigger>
+                <Badge className="hover:bg-gray-300" variant="secondary">
+                  +{specialties.length - 3}
+                </Badge>
+              </DialogTrigger>
+
+              <DialogContent className="max-w-xl w-full">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-bold">
+                    {info.row.original.firstName} {info.row.original.lastName}'s
+                    Specialties
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="flex flex-col gap-2">
+                  {specialties.map((specialty) => (
+                    <span key={`dialog-${specialty}`}>{specialty}</span>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
+      );
+    },
   }),
   columnHelper.accessor("yearsOfExperience", {
     header: ({ column }) => (
@@ -52,7 +104,7 @@ const defaultColumns = [
   }),
   columnHelper.accessor("phoneNumber", {
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Phone" />
+      <DataTableColumnHeader column={column} title="Phone Number" />
     ),
     cell: (info) => {
       return <span>+{info.getValue()}</span>;
