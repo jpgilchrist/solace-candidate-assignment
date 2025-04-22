@@ -203,11 +203,18 @@ export default function Home() {
 
       <div className="flex flex-row gap-4">
         <Input
+          value={globalFilter}
+          onChange={(e) => table.setGlobalFilter(e.target.value)}
           className="w-full lg:w-96"
           placeholder="Search"
-          onChange={(e) => table.setGlobalFilter(e.target.value)}
         />
-        <Button onClick={() => setGlobalFilter("")}>Reset Search</Button>
+
+        <Button
+          onClick={() => handleGlobalFilterChange("")}
+          disabled={globalFilter == ""}
+        >
+          Reset
+        </Button>
       </div>
 
       <DataTable table={table} loading={query.isLoading} />
